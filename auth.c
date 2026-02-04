@@ -7,6 +7,7 @@
 #include "auth.h"
 #include "sha256.h"
 #include "sqlite3.h"
+#define DATABASE_NAME "finance.db"
 
 // 辅助：隐藏密码输入（Windows）
 #ifdef _WIN32
@@ -159,7 +160,7 @@ int authenticate_user(sqlite3* db, const char* input_pwd) {
 // 主入口：登录或初始化
 int login_at_startup(void) {
     sqlite3* db;
-    if (sqlite3_open("finance.db", &db) != SQLITE_OK) {
+    if (sqlite3_open(DATABASE_NAME, &db) != SQLITE_OK) {
         fprintf(stderr, "❌ 无法打开数据库: %s\n", sqlite3_errmsg(db));
         return 0;
     }

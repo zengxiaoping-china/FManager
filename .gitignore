@@ -5,6 +5,9 @@
 *.dll
 *.lib
 *.a
+*.csv
+*.gitignore
+*_cpy.c
 
 # 构建目录
 /build/

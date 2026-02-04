@@ -8,6 +8,7 @@
 #include "utils.h"
 #include "finance.h"
 #include "settings.h"
+#define DATABASE_NAME "finance.db"
 
 // 显示所有分类（一级 + 二级）
 static void list_all_categories(sqlite3* db) {
@@ -47,7 +48,7 @@ static void list_all_categories(sqlite3* db) {
 // 显示所有成员（供编辑/删除前参考）
 static void list_members(void) {
     sqlite3* db;
-    if (sqlite3_open("finance.db", &db) != SQLITE_OK) {
+    if (sqlite3_open(DATABASE_NAME, &db) != SQLITE_OK) {
         printf("❌ 无法打开数据库\n");
         return;
     }
@@ -157,7 +158,7 @@ void add_member(void) {
     }
 
     sqlite3* db;
-    if (sqlite3_open("finance.db", &db) != SQLITE_OK) return;
+    if (sqlite3_open(DATABASE_NAME, &db) != SQLITE_OK) return;
     
     sqlite3_stmt* stmt;
     const char* sql = "INSERT INTO members (name) VALUES (?);";
@@ -190,7 +191,7 @@ void edit_member(void) {
     }
 
     sqlite3* db;
-    if (sqlite3_open("finance.db", &db) != SQLITE_OK) return;
+    if (sqlite3_open(DATABASE_NAME, &db) != SQLITE_OK) return;
 
     // 检查是否存在
     sqlite3_stmt* check;
@@ -249,7 +250,7 @@ void delete_member(void) {
     }
 
     sqlite3* db;
-    if (sqlite3_open("finance.db", &db) != SQLITE_OK) return;
+    if (sqlite3_open(DATABASE_NAME, &db) != SQLITE_OK) return;
 
     if (is_member_referenced(db, id)) {
         printf("❌ 无法删除：该成员已被财务记录引用。\n");
@@ -298,7 +299,7 @@ void manage_members(void) {
 // === 账户管理（类似，略作简化）===
 void add_account(void) {
     sqlite3* db;
-    if (sqlite3_open("finance.db", &db) != SQLITE_OK) {
+    if (sqlite3_open(DATABASE_NAME, &db) != SQLITE_OK) {
         printf("❌ 无法打开数据库\n");
         return;
     }
@@ -347,7 +348,7 @@ void add_account(void) {
 
 void edit_account(void) {
     sqlite3* db;
-    if (sqlite3_open("finance.db", &db) != SQLITE_OK) {
+    if (sqlite3_open(DATABASE_NAME, &db) != SQLITE_OK) {
         printf("❌ 无法打开数据库\n");
         return;
     }
@@ -445,7 +446,7 @@ void edit_account(void) {
 
 void delete_account(void) {
     sqlite3* db;
-    if (sqlite3_open("finance.db", &db) != SQLITE_OK) {
+    if (sqlite3_open(DATABASE_NAME, &db) != SQLITE_OK) {
         printf("❌ 无法打开数据库\n");
         return;
     }
@@ -564,7 +565,7 @@ void manage_accounts(void) {
 void add_category(void) {
     
     sqlite3* db;
-    if (sqlite3_open("finance.db", &db) != SQLITE_OK) {
+    if (sqlite3_open(DATABASE_NAME, &db) != SQLITE_OK) {
         printf("❌ 无法打开数据库\n");
         return;
     }
@@ -674,7 +675,7 @@ void add_category(void) {
 //编辑分类
 void edit_category(void) {
     sqlite3* db;
-    if (sqlite3_open("finance.db", &db) != SQLITE_OK) {
+    if (sqlite3_open(DATABASE_NAME, &db) != SQLITE_OK) {
         printf("❌ 无法打开数据库\n");
         return;
     }
@@ -776,7 +777,7 @@ void edit_category(void) {
 //删除分类
 void delete_category(void) {
     sqlite3* db;
-    if (sqlite3_open("finance.db", &db) != SQLITE_OK) {
+    if (sqlite3_open(DATABASE_NAME, &db) != SQLITE_OK) {
         printf("❌ 无法打开数据库\n");
         return;
     }
@@ -915,7 +916,7 @@ void manage_categories(void) {
 
 void change_password(void) {
     sqlite3* db;
-    if (sqlite3_open("finance.db", &db) != SQLITE_OK) {
+    if (sqlite3_open(DATABASE_NAME, &db) != SQLITE_OK) {
         printf("❌ 无法打开数据库。\n");
         return;
     }

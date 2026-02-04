@@ -3,14 +3,15 @@
 #include <stdlib.h>
 #include <string.h>
 #include <time.h>
-#include "finance.h"
 #include "utils.h"
+#include "finance.h"
 #include "sqlite3.h"
+#define DATABASE_NAME "finance.db"
 
 //初始化数据库函数
 void init_finance_database(void) {
     sqlite3* db;
-    if (sqlite3_open("finance.db", &db) != SQLITE_OK) {
+    if (sqlite3_open(DATABASE_NAME, &db) != SQLITE_OK) {
         fprintf(stderr, "❌ 无法打开数据库（财务模块）\n");
         return;
     }
@@ -19,38 +20,38 @@ void init_finance_database(void) {
     sqlite3_exec(db, "PRAGMA foreign_keys = ON;", NULL, NULL, NULL);
 
     // 分类表（支持父子结构）
-    sqlite3_exec(db,
+    const char *create_categories_sql=
         "CREATE TABLE IF NOT EXISTS categories ("
         "  id INTEGER PRIMARY KEY AUTOINCREMENT,"
         "  name TEXT NOT NULL UNIQUE,"
         "  parent_id INTEGER,"
         "  type TEXT NOT NULL CHECK(type IN ('income', 'expense')), "
-        "  FOREIGN KEY(parent_id) REFERENCES categories(id)"
-        ");",
-        NULL, NULL, NULL);
+        "  FOREIGN KEY(parent_id) REFERENCES categories(id)"");";
+    if (sqlite3_exec(db, create_categories_sql, NULL, NULL, NULL) != SQLITE_OK) {
+        fprintf(stderr, "创建 categories 表失败: %s\n", sqlite3_errmsg(db));
+    }
 
     // 创建 accounts 表（含 balance）
-    const char* create_accounts_sql =
-    "CREATE TABLE IF NOT EXISTS accounts ("
-    "id INTEGER PRIMARY KEY AUTOINCREMENT, "
-    "name TEXT NOT NULL UNIQUE, "
-    "balance REAL DEFAULT 0.0"
-    ");";
-
+    const char *create_accounts_sql =
+        "CREATE TABLE IF NOT EXISTS accounts ("
+        "id INTEGER PRIMARY KEY AUTOINCREMENT, "
+        "name TEXT NOT NULL UNIQUE, "
+        "balance REAL DEFAULT 0.0"");";
     if (sqlite3_exec(db, create_accounts_sql, NULL, NULL, NULL) != SQLITE_OK) {
         fprintf(stderr, "创建 accounts 表失败: %s\n", sqlite3_errmsg(db));
     }
 
     // 成员表（家庭成员）
-    sqlite3_exec(db,
+    const char *create_members_sql=
         "CREATE TABLE IF NOT EXISTS members ("
         "  id INTEGER PRIMARY KEY AUTOINCREMENT,"
-        "  name TEXT NOT NULL UNIQUE"
-        ");",
-        NULL, NULL, NULL);
+        "  name TEXT NOT NULL UNIQUE"");";
+    if (sqlite3_exec(db, create_members_sql, NULL, NULL, NULL) != SQLITE_OK) {
+        fprintf(stderr, "创建 members 表失败: %s\n", sqlite3_errmsg(db));
+    }
 
     // 记录表（核心）
-    sqlite3_exec(db,
+    const char *create_records_sql=
         "CREATE TABLE IF NOT EXISTS records ("
         "  id INTEGER PRIMARY KEY AUTOINCREMENT,"
         "  amount REAL NOT NULL CHECK(amount > 0),"
@@ -65,8 +66,10 @@ void init_finance_database(void) {
         "  FOREIGN KEY(category_id) REFERENCES categories(id),"
         "  FOREIGN KEY(account_id) REFERENCES accounts(id),"
         "  FOREIGN KEY(member_id) REFERENCES members(id)"
-        ");",
-        NULL, NULL, NULL);
+        ");";
+    if (sqlite3_exec(db, create_records_sql, NULL, NULL, NULL) != SQLITE_OK) {
+        fprintf(stderr, "创建 records 表失败: %s\n", sqlite3_errmsg(db));
+    }
 
     sqlite3_close(db);
 }
@@ -202,7 +205,7 @@ static int apply_balance_delta(sqlite3* db, int account_id, double delta) {
 // 添加收支记录函数
 void add_record(void) {
     sqlite3* db;
-    if (sqlite3_open("finance.db", &db) != SQLITE_OK) {
+    if (sqlite3_open(DATABASE_NAME, &db) != SQLITE_OK) {
         printf("❌ 无法打开数据库: %s\n", sqlite3_errmsg(db));
         return;
     }
@@ -369,7 +372,7 @@ void edit_record(void) {
     }
 
     sqlite3* db;
-    if (sqlite3_open("finance.db", &db) != SQLITE_OK) {
+    if (sqlite3_open(DATABASE_NAME, &db) != SQLITE_OK) {
         printf("❌ 无法打开数据库: %s\n", sqlite3_errmsg(db));
         return;
     }
@@ -598,7 +601,7 @@ void delete_record(void) {
     }
 
     sqlite3* db;
-    if (sqlite3_open("finance.db", &db) != SQLITE_OK) {
+    if (sqlite3_open(DATABASE_NAME, &db) != SQLITE_OK) {
         printf("❌ 无法打开数据库: %s\n", sqlite3_errmsg(db));
         return;
     }
@@ -718,7 +721,7 @@ void delete_record(void) {
 //显示所有收支记录函数（分页显示）
 void list_records(void) {
     sqlite3* db;
-    if (sqlite3_open("finance.db", &db) != SQLITE_OK) {
+    if (sqlite3_open(DATABASE_NAME, &db) != SQLITE_OK) {
         printf("❌ 无法打开数据库: %s\n", sqlite3_errmsg(db));
         return;
     }
@@ -845,7 +848,7 @@ void export_to_csv(void) {
     fprintf(fp, "ID,日期,类型,父分类,子分类,账户,成员,金额,备注,更新时间\n");
 
     sqlite3* db;
-    if (sqlite3_open("finance.db", &db) != SQLITE_OK) {
+    if (sqlite3_open(DATABASE_NAME, &db) != SQLITE_OK) {
         printf("❌ 无法打开数据库: %s\n", sqlite3_errmsg(db));
         fclose(fp);
         return;
@@ -957,7 +960,7 @@ void query_by_date(void) {
     }
 
     sqlite3* db;
-    if (sqlite3_open("finance.db", &db) != SQLITE_OK) {
+    if (sqlite3_open(DATABASE_NAME, &db) != SQLITE_OK) {
         printf("❌ 无法打开数据库: %s\n", sqlite3_errmsg(db));
         return;
     }
@@ -1023,7 +1026,7 @@ void query_by_category(void) {
     }
 
     sqlite3* db;
-    if (sqlite3_open("finance.db", &db) != SQLITE_OK) {
+    if (sqlite3_open(DATABASE_NAME, &db) != SQLITE_OK) {
         printf("❌ 无法打开数据库: %s\n", sqlite3_errmsg(db));
         return;
     }
@@ -1079,7 +1082,7 @@ void query_by_category(void) {
 //月度统计报表
 void show_monthly_report(void) {
     sqlite3* db;
-    if (sqlite3_open("finance.db", &db) != SQLITE_OK) {
+    if (sqlite3_open(DATABASE_NAME, &db) != SQLITE_OK) {
         printf("❌ 无法打开数据库: %s\n", sqlite3_errmsg(db));
         return;
     }
@@ -1133,7 +1136,7 @@ void show_monthly_report(void) {
 //年度统计报表
 void show_yearly_report(void) {
     sqlite3* db;
-    if (sqlite3_open("finance.db", &db) != SQLITE_OK) {
+    if (sqlite3_open(DATABASE_NAME, &db) != SQLITE_OK) {
         printf("❌ 无法打开数据库: %s\n", sqlite3_errmsg(db));
         return;
     }
@@ -1209,7 +1212,7 @@ void show_category_report(void) {
     }
 
     sqlite3* db;
-    if (sqlite3_open("finance.db", &db) != SQLITE_OK) {
+    if (sqlite3_open(DATABASE_NAME, &db) != SQLITE_OK) {
         printf("❌ 无法打开数据库: %s\n", sqlite3_errmsg(db));
         return;
     }
@@ -1266,7 +1269,7 @@ void show_category_report(void) {
 //账户选择（扁平列表）
 int select_account(void) {
     sqlite3* db;
-    if (sqlite3_open("finance.db", &db) != SQLITE_OK) {
+    if (sqlite3_open(DATABASE_NAME, &db) != SQLITE_OK) {
         printf("❌ 无法打开数据库: %s\n", sqlite3_errmsg(db));
         return -1;
     }
@@ -1341,7 +1344,7 @@ int select_account(void) {
 // 分类选择（带层级）
 int select_category(const char* type) {
     sqlite3* db;
-    if (sqlite3_open("finance.db", &db) != SQLITE_OK) {
+    if (sqlite3_open(DATABASE_NAME, &db) != SQLITE_OK) {
         printf("❌ 无法打开数据库: %s\n", sqlite3_errmsg(db));
         return -1;
     }
@@ -1424,7 +1427,7 @@ int select_category(const char* type) {
 //成员选择器函数
 int select_member(void) {
     sqlite3* db;
-    if (sqlite3_open("finance.db", &db) != SQLITE_OK) {
+    if (sqlite3_open(DATABASE_NAME, &db) != SQLITE_OK) {
         printf("❌ 无法打开数据库\n");
         return -1;
     }

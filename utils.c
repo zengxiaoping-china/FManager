@@ -27,7 +27,7 @@ static int _getch(void) {
     int ch;
     if (tcgetattr(STDIN_FILENO, &oldt) != 0) return EOF;
     newt = oldt;
-    newt.c_lflag &= ~(ICANON | ECHO);  // ← 注意：你原文是 “～”，应为 “～”
+    newt.c_lflag &= ~(ICANON | ECHO);  // ← 注意：“~”
     if (tcsetattr(STDIN_FILENO, TCSANOW, &newt) != 0) return EOF;
     ch = getchar();
     tcsetattr(STDIN_FILENO, TCSANOW, &oldt);
